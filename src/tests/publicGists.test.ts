@@ -1,12 +1,6 @@
-import request from 'supertest'
-import dotenv from 'dotenv'
+import request, { Response } from 'supertest'
 import TestAgent from 'supertest/lib/agent'
-
-dotenv.config()
-
-const BASE_URL = 'https://api.github.com'
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN
-const USER_AGENT = process.env.USER_AGENT || 'vicusbass'
+import { BASE_URL, USER_AGENT, GITHUB_TOKEN } from './config'
 
 let req: TestAgent
 
@@ -44,23 +38,20 @@ describe('GitHub Gist API', () => {
       })
       it('should get a list of maximum 30 public gists by default', async () => {
         const response = await req.get('/gists')
-        expect(response.status).toBe(200)
-        expect(response.body).toBeInstanceOf(Array)
+        checkResponseBody(response)
         expect(response.body.length).toBeGreaterThan(0)
         expect(response.body.length).toBeLessThanOrEqual(30)
       }),
         it('should get a list of public gists with a given limit', async () => {
           const limit = 2
           const response = await req.get(`/gists/public?per_page=${limit}`)
-          expect(response.status).toBe(200)
-          expect(response.body).toBeInstanceOf(Array)
+          checkResponseBody(response)
           expect(response.body.length).toBeGreaterThan(0)
           expect(response.body.length).toBeLessThanOrEqual(limit)
         }),
         it('should be paginated', async () => {
           const response = await req.get(`/gists/public?per_page=1&page=5`)
-          expect(response.status).toBe(200)
-          expect(response.body).toBeInstanceOf(Array)
+          checkResponseBody(response)
           expect(response.headers).toHaveProperty('link')
           expect(response.headers.link).toContain(
             '/gists/public?per_page=1&page=6>; rel="next"',
@@ -73,8 +64,7 @@ describe('GitHub Gist API', () => {
           'should ignore limits higher than 100 or smaller than 1: value %p',
           async limit => {
             const response = await req.get(`/gists/public?per_page=${limit}`)
-            expect(response.status).toBe(200)
-            expect(response.body).toBeInstanceOf(Array)
+            checkResponseBody(response)
             const expectedLength = limit <= 0 ? 30 : 100
             expect(response.body.length).toEqual(expectedLength)
           },
@@ -85,8 +75,7 @@ describe('GitHub Gist API', () => {
           const response = await req.get(
             `/gists/public?since=${date.toISOString()}`,
           )
-          expect(response.status).toBe(200)
-          expect(response.body).toBeInstanceOf(Array)
+          checkResponseBody(response)
           expect(response.body.length).toBeGreaterThan(0)
           response.body.forEach((gist: { updated_at: string }) => {
             expect(gist).toHaveProperty('updated_at')
@@ -94,6 +83,20 @@ describe('GitHub Gist API', () => {
               date.getTime(),
             )
           })
+        }),
+        it('should not return gists from the future', async () => {
+          const date = new Date()
+          date.setDate(date.getDate() + 7)
+          const response = await req.get(
+            `/gists/public?since=${date.toISOString()}`,
+          )
+          checkResponseBody(response)
+          expect(response.body.length).toEqual(0)
         })
     })
 })
+
+const checkResponseBody = (response: Response) => {
+  expect(response.status).toBe(200)
+  expect(response.body).toBeInstanceOf(Array)
+}
