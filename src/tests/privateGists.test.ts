@@ -1,11 +1,11 @@
-import request from 'supertest'
-import TestAgent from 'supertest/lib/agent'
 import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import { BASE_URL, USER_AGENT, GITHUB_TOKEN, GITHUB_USERNAME } from './config'
 import { gistResponseSchema } from '../schema/createGistResponse'
+import ApiClient from '../client/apiClient'
 
-let req: TestAgent
+const apiClient: ApiClient = new ApiClient(BASE_URL, GITHUB_TOKEN, USER_AGENT)
+
 const ajv = new Ajv()
 addFormats(ajv)
 const validate = ajv.compile(gistResponseSchema)
@@ -25,13 +25,8 @@ const gistContent = {
 describe('GitHub private Gists API', () => {
   describe('/gists', () => {
     beforeEach(async () => {
-      req = request.agent(BASE_URL)
-      req.set('Authorization', `Bearer ${GITHUB_TOKEN}`)
-      req.set('Accept', 'application/vnd.github.v3+json')
-      req.set('User-Agent', USER_AGENT)
-
       // create a private gist for the authenticated user as test data
-      const response = await req.post('/gists').send(gistContent)
+      const response = await apiClient.createGist(gistContent)
       expect(response.status).toBe(201)
       gistUrl = response.body.url
       expect(gistUrl).toBeDefined()
@@ -45,7 +40,7 @@ describe('GitHub private Gists API', () => {
       gistId = parts[parts.length - 1]
     }),
       it('should get the newly created gist', async () => {
-        const response = await req.get(`/gists/${gistId}`)
+        const response = await apiClient.getGist(gistId)
         expect(response.status).toBe(200)
         expect(response.body.owner.login).toBe(GITHUB_USERNAME)
         expect(response.body.public).toBe(false)
@@ -58,7 +53,7 @@ describe('GitHub private Gists API', () => {
         expect(isResponseValid).toBe(true)
       }),
       it('should get a list of gists for the authenticated user', async () => {
-        const response = await req.get('/gists')
+        const response = await apiClient.getGists()
         expect(response.status).toBe(200)
         expect(response.body.length).toBeGreaterThan(0)
         const gist = response.body.find((g: { id: string }) => g.id === gistId)
@@ -66,14 +61,15 @@ describe('GitHub private Gists API', () => {
       }),
       it('should return 404 for a non-existing gist id', async () => {
         const nonExistingId = 'there-is-no-way-this-id-exists'
-        const response = await req.get(`/gists/${nonExistingId}`)
+        const response = await apiClient.getGist(nonExistingId)
         expect(response.status).toBe(404)
       })
     afterEach(async () => {
       // delete the gist created as test data
-      const response = await req.delete(`/gists/${gistId}`)
+      let response = await apiClient.deleteGist(gistId)
       expect(response.status).toBe(204)
-      req.get(gistUrl).expect(404)
+      response = await apiClient.getGist(gistId)
+      expect(response.status).toBe(404)
     })
   })
 })
