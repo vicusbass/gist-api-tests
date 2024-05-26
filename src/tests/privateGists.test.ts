@@ -2,7 +2,7 @@ import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import { BASE_URL, USER_AGENT, GITHUB_TOKEN, GITHUB_USERNAME } from './config'
 import { gistResponseSchema } from '../schema/createGistResponse'
-import ApiClient from '../client/apiClient'
+import ApiClient, { GistContent } from '../client/apiClient'
 
 const apiClient: ApiClient = new ApiClient(BASE_URL, GITHUB_TOKEN, USER_AGENT)
 
@@ -12,7 +12,7 @@ const validate = ajv.compile(gistResponseSchema)
 
 let gistId: string
 let gistUrl: string
-const gistContent = {
+const gistContent: GistContent = {
   description: 'test gist',
   public: false,
   files: {
@@ -46,6 +46,7 @@ describe('GitHub private Gists API', () => {
         expect(response.body.public).toBe(false)
         expect(response.body.files).toMatchObject(gistContent.files)
 
+        // validate against JSON schema
         const isResponseValid = validate(response.body)
         if (!isResponseValid) {
           console.error(validate.errors)
@@ -63,6 +64,12 @@ describe('GitHub private Gists API', () => {
         const nonExistingId = 'there-is-no-way-this-id-exists'
         const response = await apiClient.getGist(nonExistingId)
         expect(response.status).toBe(404)
+      }),
+      it('should get secret gist from another user', async () => {
+        const nonExistingId = 'ebcf6e4c02ecd21f65aac28321e77ddf'
+        const response = await apiClient.getGist(nonExistingId)
+        expect(response.status).toBe(200)
+        expect(response.body.owner.login).toBe('vasiloa')
       })
     afterEach(async () => {
       // delete the gist created as test data
