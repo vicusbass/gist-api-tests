@@ -1,8 +1,8 @@
 import { Response } from 'supertest'
-import { BASE_URL, USER_AGENT, GITHUB_TOKEN } from './config'
+import { BASE_URL, USER_AGENT, TOKEN } from './config'
 import ApiClient from '../client/apiClient'
 
-const apiClient: ApiClient = new ApiClient(BASE_URL, GITHUB_TOKEN, USER_AGENT)
+const apiClient: ApiClient = new ApiClient(BASE_URL, TOKEN, USER_AGENT)
 
 describe('GitHub Gist API', () => {
   describe('GET /gists/public', () => {

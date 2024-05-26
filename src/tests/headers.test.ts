@@ -1,5 +1,5 @@
 import request from 'supertest'
-import { BASE_URL, USER_AGENT, GITHUB_TOKEN } from './config'
+import { BASE_URL, USER_AGENT, TOKEN } from './config'
 
 describe('GitHub Gist API', () => {
   describe('Invalid headers', () => {
@@ -21,7 +21,7 @@ describe('GitHub Gist API', () => {
       it('should return 403 if user agent is missing', async () => {
         const response = await request(BASE_URL)
           .get('/gists/public')
-          .set('Authorization', `Bearer ${GITHUB_TOKEN}`)
+          .set('Authorization', `Bearer ${TOKEN}`)
           .set('Accept', 'application/vnd.github.v3+json')
         expect(response.status).toBe(403)
       })

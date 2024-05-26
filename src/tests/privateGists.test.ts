@@ -1,10 +1,10 @@
 import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
-import { BASE_URL, USER_AGENT, GITHUB_TOKEN, GITHUB_USERNAME } from './config'
+import { BASE_URL, USER_AGENT, TOKEN, USERNAME } from './config'
 import { gistResponseSchema } from '../schema/createGistResponse'
 import ApiClient, { GistContent } from '../client/apiClient'
 
-const apiClient: ApiClient = new ApiClient(BASE_URL, GITHUB_TOKEN, USER_AGENT)
+const apiClient: ApiClient = new ApiClient(BASE_URL, TOKEN, USER_AGENT)
 
 const ajv = new Ajv()
 addFormats(ajv)
@@ -42,7 +42,7 @@ describe('GitHub private Gists API', () => {
       it('should get the newly created gist', async () => {
         const response = await apiClient.getGist(gistId)
         expect(response.status).toBe(200)
-        expect(response.body.owner.login).toBe(GITHUB_USERNAME)
+        expect(response.body.owner.login).toBe(USERNAME)
         expect(response.body.public).toBe(false)
 
         // validate against JSON schema
