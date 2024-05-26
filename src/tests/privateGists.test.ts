@@ -86,6 +86,14 @@ describe('GitHub private Gists API', () => {
         response = await apiClient.getGist(gistId)
         expect(response.body.description).toBe(newContent.description)
       }),
+      it('should return 404 when updating non-existing gist', async () => {
+        const nonExistingId = 'there-is-no-way-this-id-exists'
+        const newContent = {
+          description: 'updated test gist',
+        }
+        const response = await apiClient.updateGist(nonExistingId, newContent)
+        expect(response.status).toBe(404)
+      }),
       afterEach(async () => {
         // delete the gist created as test data
         let response = await apiClient.deleteGist(gistId)
