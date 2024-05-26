@@ -53,3 +53,6 @@ In some cases, test data creation could be done without REST API calls, where po
 GitHub also offers an SDK for its REST API. I decided this might be out of scope for this testing project, but any SDK should also have an extended test suite which would test user journeys/scenarios.
 
 Most tests are straightforward, I included also JSON schema validation for creating gists, some edge cases (e.g. list public gists from the future, use negative or zero values for pagination, etc). There are some scenarios which are harder to control in a public system like GitHub, one good example is their throtthling of API requests. In a controlable system we could configure throttling with low values for a specific test run.
+Also, because we cannot control GitHub defaults, some tests are slow (especially those related to public gists), in at least on case the test will retrieve 100 gists. When applicable, setting lower pagination defaults would speed up tests.
+
+I also added GitHub actions, for running the tests in PRs and in main, after PRs are merged.
