@@ -10,10 +10,12 @@ Install dependencies
 npm install
 ```
 
-Add env variables to a .env file in the root of the project (this file is ignore by `git`)
+Add mandatory env variables to a .env file in the root of the project (this file is ignore by `git`)
 
 ```bash
 GITHUB_TOKEN=<your token>
+USER_AGENT=<some value, e.g. your username>
+GITHUB_USERNAME=<your username>
 ```
 
 Run tests:
