@@ -3,8 +3,8 @@ import TestAgent from 'supertest/lib/agent'
 
 export type GistContent = {
   description?: string
-  public: boolean
-  files: {
+  public?: boolean
+  files?: {
     [key: string]: {
       content: string
     }
@@ -33,6 +33,10 @@ class ApiClient {
 
   async createGist(content: GistContent): Promise<Response> {
     return await this.req.post('/gists').send(content)
+  }
+
+  async updateGist(id: string, content: GistContent): Promise<Response> {
+    return await this.req.patch(`/gists/${id}`).send(content)
   }
 
   async getGist(id: string) {

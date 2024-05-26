@@ -44,7 +44,6 @@ describe('GitHub private Gists API', () => {
         expect(response.status).toBe(200)
         expect(response.body.owner.login).toBe(GITHUB_USERNAME)
         expect(response.body.public).toBe(false)
-        expect(response.body.files).toMatchObject(gistContent.files)
 
         // validate against JSON schema
         const isResponseValid = validate(response.body)
@@ -70,13 +69,29 @@ describe('GitHub private Gists API', () => {
         const response = await apiClient.getGist(nonExistingId)
         expect(response.status).toBe(200)
         expect(response.body.owner.login).toBe('vasiloa')
+      }),
+      it('should update the gist', async () => {
+        const newContent = {
+          description: 'updated test gist',
+        }
+        let response = await apiClient.updateGist(gistId, newContent)
+        expect(response.status).toBe(200)
+        expect(response.body.description).toBe(newContent.description)
+        expect(response.body.public).toBe(gistContent.public)
+        expect(response.body).toHaveProperty('files')
+        expect(response.body.files).toMatchObject({
+          'temporary.txt': expect.any(Object),
+        })
+        // making sure gist was updated
+        response = await apiClient.getGist(gistId)
+        expect(response.body.description).toBe(newContent.description)
+      }),
+      afterEach(async () => {
+        // delete the gist created as test data
+        let response = await apiClient.deleteGist(gistId)
+        expect(response.status).toBe(204)
+        response = await apiClient.getGist(gistId)
+        expect(response.status).toBe(404)
       })
-    afterEach(async () => {
-      // delete the gist created as test data
-      let response = await apiClient.deleteGist(gistId)
-      expect(response.status).toBe(204)
-      response = await apiClient.getGist(gistId)
-      expect(response.status).toBe(404)
-    })
   })
 })
